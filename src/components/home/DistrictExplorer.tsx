@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { MapPin, ArrowRight } from "lucide-react";
 import { DISTRICTS, VILLAGES } from "@/lib/wilayah";
+import { TiltCard } from "@/components/motion/TiltCard";
 
 /** Peta wilayah interaktif: sorot kecamatan untuk melihat kelurahannya. */
 export function DistrictExplorer() {
@@ -21,9 +22,10 @@ export function DistrictExplorer() {
             viewport={{ once: true, amount: 0.25 }}
             transition={{ duration: 0.6, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
           >
+            <TiltCard className="h-full" maxTilt={5} glow={`${district.accent}26`}>
             <Link
               href={`/wilayah/${district.slug}`}
-              className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-ink-900/8 bg-white p-4 transition-all duration-500 hover:-translate-y-1.5 hover:border-transparent hover:shadow-xl"
+              className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-ink-900/8 bg-white p-4 transition-all duration-500 hover:border-transparent hover:shadow-xl"
             >
               <span
                 aria-hidden
@@ -75,6 +77,7 @@ export function DistrictExplorer() {
                 Lihat kelurahan <ArrowRight className="h-3 w-3" />
               </span>
             </Link>
+            </TiltCard>
           </motion.div>
         );
       })}

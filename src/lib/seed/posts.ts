@@ -1,4 +1,4 @@
-import type { Post } from "../types";
+import type { NewPostInput, Post } from "../types";
 
 const V = "https://berita.cilegon.go.id/assets/img/berita";
 
@@ -512,5 +512,29 @@ export const SEED_AGENDAS = [
     ends_at: "2026-12-02T13:00:00+07:00",
     organizer: "BPBD Kota Cilegon",
     district_slug: "ciwandan",
+  },
+];
+
+/**
+ * Draf contoh — memberi dashboard redaksi variasi status sejak awal.
+ * Tidak tampil di situs publik sampai diterbitkan admin.
+ */
+export const SEED_DRAFTS: NewPostInput[] = [
+  {
+    title: "Pemkot Cilegon Siapkan Program Pelatihan Keterampilan untuk Warga Kelurahan",
+    excerpt:
+      "Draf: program pelatihan kerja sama Disnaker dan perusahaan kawasan industri untuk warga 43 kelurahan.",
+    content: [
+      "Draf ini menunggu konfirmasi narasumber dari Dinas Tenaga Kerja Kota Cilegon sebelum diterbitkan.",
+      "Rencana program mencakup pelatihan keterampilan teknis, sertifikasi kompetensi, dan penyaluran kerja bagi warga kelurahan.",
+      "Redaksi akan melengkapi kutipan pejabat, jadwal pelatihan, serta persyaratan pendaftaran pada versi final.",
+    ],
+    cover_image: "",
+    category_slug: "ekonomi",
+    district_slug: null,
+    village_slug: null,
+    author: "Redaksi Info Kelurahan",
+    is_headline: false,
+    status: "draft",
   },
 ];

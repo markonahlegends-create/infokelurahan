@@ -1,7 +1,7 @@
 import type { Repository } from "./repository";
 import { localRepository } from "./local";
 import { createSupabaseRepository } from "./supabase";
-import { SEED_AGENDAS, SEED_ANNOUNCEMENTS, SEED_POSTS } from "../seed/posts";
+import { SEED_AGENDAS, SEED_ANNOUNCEMENTS, SEED_DRAFTS, SEED_POSTS } from "../seed/posts";
 
 export * from "./repository";
 export { localRepository } from "./local";
@@ -52,22 +52,42 @@ export async function getRepository(): Promise<Repository> {
   return localRepository;
 }
 
-/** Isi data awal bila database Supabase masih kosong. */
+/**
+ * Isi data awal bila database Supabase masih kosong.
+ *
+ * Seluruh proses bersifat best-effort: kegagalan apa pun (jaringan,
+ * RLS, skema belum siap) hanya dicatat dan aplikasi tetap berjalan.
+ */
 async function ensureSeed(repo: Repository): Promise<void> {
   if (globalCache.__infokelurahan_seeded) return;
   if (env("AUTO_SEED").toLowerCase() === "false") {
     globalCache.__infokelurahan_seeded = true;
     return;
   }
+
   try {
     const { total } = await repo.listPosts({ limit: 1, includeDrafts: true });
     if (total > 0) {
       globalCache.__infokelurahan_seeded = true;
       return;
     }
-    console.info("[info-kelurahan] Database kosong — mengisi data awal berita Cilegon…");
-    for (const seed of [...SEED_POSTS].reverse()) {
-      await repo.createPost({
+  } catch (error) {
+    console.warn("[info-kelurahan] tidak dapat memeriksa isi database:", error);
+    globalCache.__infokelurahan_seeded = true;
+    return;
+  }
+
+  console.info("[info-kelurahan] Database kosong — mengisi data awal berita Cilegon…");
+
+  // Urutkan dari yang paling lama agar urutan tampil sesuai kronologi.
+  const ordered = [...SEED_POSTS].sort(
+    (a, b) => new Date(a.published_at).getTime() - new Date(b.published_at).getTime(),
+  );
+
+  let inserted = 0;
+  for (const seed of ordered) {
+    try {
+      const post = await repo.createPost({
         title: seed.title,
         excerpt: seed.excerpt,
         content: seed.content,
@@ -77,47 +97,84 @@ async function ensureSeed(repo: Repository): Promise<void> {
         village_slug: seed.village_slug,
         author: seed.author,
         is_headline: false,
-        status: seed.status,
+        status: "published",
       });
-      // published_at & views dari data awal dipertahankan via patch ringan
-      const created = await repo.listPosts({ limit: 1, sort: "terbaru" });
-      const post = created.posts[0];
-      if (post) {
-        await repo.updatePost(post.id, {});
+      // Kembalikan tanggal terbit & jumlah pembaca asli dari data awal.
+      await patchSeedMeta(post.id, seed.published_at, seed.views);
+      if (seed.is_headline) {
+        await repo.updatePost(post.id, { is_headline: true });
       }
+      inserted += 1;
+    } catch (error) {
+      console.warn(`[info-kelurahan] gagal menyisipkan "${seed.slug}":`, error);
+      break;
     }
-    await seedExtras(repo);
-    globalCache.__infokelurahan_seeded = true;
-    console.info("[info-kelurahan] Data awal berhasil dimuat ke Supabase.");
-  } catch (error) {
-    console.error("[info-kelurahan] Gagal mengisi data awal:", error);
   }
+
+  // Draf contoh agar dashboard memiliki variasi status.
+  try {
+    const draft = SEED_DRAFTS[0];
+    if (draft) {
+      await repo.createPost({ ...draft, status: "draft" });
+    }
+  } catch {
+    /* opsional */
+  }
+
+  await seedExtras();
+  globalCache.__infokelurahan_seeded = true;
+  console.info(`[info-kelurahan] ${inserted} berita awal dimuat ke Supabase.`);
 }
 
-async function seedExtras(_repo: Repository): Promise<void> {
-  // Agenda & pengumuman hanya tersedia di mode Supabase bila tabelnya ada.
-  // Kegagalan di sini tidak boleh menghentikan aplikasi.
+/** Ubah published_at & views untuk baris yang baru disisipkan. */
+async function patchSeedMeta(id: number, publishedAt: string, views: number): Promise<void> {
   const base = env("SUPABASE_URL");
   const key = env("SUPABASE_SERVICE_ROLE_KEY");
   if (!base || !key) return;
+  await fetch(`${base}/rest/v1/posts?id=eq.${id}`, {
+    method: "PATCH",
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({ published_at: publishedAt, views }),
+  });
+}
+
+/** Agenda & pengumuman hanya tersedia bila tabelnya sudah dibuat. */
+async function seedExtras(): Promise<void> {
+  const base = env("SUPABASE_URL");
+  const key = env("SUPABASE_SERVICE_ROLE_KEY");
+  if (!base || !key) return;
+
   const headers = {
     apikey: key,
     Authorization: `Bearer ${key}`,
     "Content-Type": "application/json",
     Prefer: "return=minimal",
   };
-  try {
-    await fetch(`${base}/rest/v1/announcements`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(SEED_ANNOUNCEMENTS),
-    });
-    await fetch(`${base}/rest/v1/agendas`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(SEED_AGENDAS),
-    });
-  } catch {
-    /* opsional */
-  }
+
+  const insert = async (table: string, rows: unknown[]) => {
+    try {
+      const probe = await fetch(`${base}/rest/v1/${table}?select=id&limit=1`, { headers });
+      if (!probe.ok) return;
+      const existing = (await probe.json()) as unknown[];
+      if (existing.length > 0) return;
+      await fetch(`${base}/rest/v1/${table}`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(rows),
+      });
+    } catch {
+      /* opsional */
+    }
+  };
+
+  await insert("announcements", SEED_ANNOUNCEMENTS);
+  await insert("agendas", SEED_AGENDAS);
 }
+
+/** Ekspor untuk pengujian/manual seeding. */
+export { ensureSeed as seedSupabase };

@@ -52,15 +52,11 @@ export function ArticleTools({ id, slug, title, views }: ArticleToolsProps) {
   useEffect(() => {
     const article = document.getElementById("article-body");
     if (!article) return;
-    article.style.fontSize = `${fontScale}rem`;
-    article.style.setProperty("--article-scale", String(fontScale));
-    article.querySelectorAll<HTMLElement>(".article-prose").forEach((el) => {
-      el.style.fontSize = `${1.0625 * fontScale}rem`;
-    });
+    // Ukuran dasar artikel-prose 1.0625rem (mobile) / 1.125rem (desktop).
+    const base = window.matchMedia("(min-width: 768px)").matches ? 1.125 : 1.0625;
+    article.style.fontSize = `${(base * fontScale).toFixed(3)}rem`;
     return () => {
-      article.querySelectorAll<HTMLElement>(".article-prose").forEach((el) => {
-        el.style.fontSize = "";
-      });
+      article.style.fontSize = "";
     };
   }, [fontScale]);
 

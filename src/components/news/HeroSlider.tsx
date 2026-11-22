@@ -154,7 +154,7 @@ export function HeroSlider({ posts }: { posts: Post[] }) {
                   setIndex(i);
                 }}
                 aria-label={`Berita ${i + 1}: ${item.title}`}
-                aria-current={i === index}
+                aria-current={i === index ? "true" : undefined}
                 className="group relative flex-1 max-w-[92px] text-left"
               >
                 <span className="block h-[3px] overflow-hidden rounded-full bg-white/20">
