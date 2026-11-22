@@ -1,16 +1,17 @@
 import { randomUUID } from "node:crypto";
+import path from "node:path";
 import { put } from "@vercel/blob";
 
 /**
  * Penyimpanan berkas gambar unggahan.
  *
- * Urutan strategi:
- * 1. **Vercel Blob** bila `BLOB_READ_WRITE_TOKEN` tersedia (produksi).
- * 2. **Folder lokal** `.data/uploads`, disajikan lewat `/api/media/<berkas>`
- *    (pengembangan & self-host).
- * 3. **Supabase Storage** bila bucket `media` sudah dibuat.
+ * Urutan strategi (otomatis, tanpa perlu konfigurasi tambahan):
+ * 1. **Supabase Storage** (bucket publik `media`) — persisten di serverless.
+ * 2. **Vercel Blob** bila `BLOB_READ_WRITE_TOKEN` tersedia.
+ * 3. **Folder lokal** `.data/uploads`, disajikan lewat `/api/media/<berkas>`
+ *    untuk pengembangan dan hosting sendiri.
  *
- * Dengan begitu unggahan selalu berfungsi tanpa memaksa satu layanan berbayar.
+ * Tujuannya: unggahan selalu berfungsi tanpa memaksa satu layanan berbayar.
  */
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -26,7 +27,7 @@ const SUPABASE_BUCKET = "media";
 
 export interface SavedImage {
   url: string;
-  storage: "vercel-blob" | "local" | "supabase";
+  storage: "supabase" | "vercel-blob" | "local";
 }
 
 /** Apakah MIME termasuk gambar yang didukung? */
@@ -34,7 +35,7 @@ export function isAllowedImageType(type: string): boolean {
   return (ALLOWED_IMAGE_TYPES as readonly string[]).includes(type.toLowerCase());
 }
 
-/** Nama berkas unik dan aman: slug waktu + UUID + ekstensi. */
+/** Nama berkas unik dan aman: tanggal + UUID + ekstensi. */
 export function buildImageName(originalName: string, mime: string): string {
   const extFromName = /\.(jpe?g|png|webp|avif|gif)$/i.exec(originalName)?.[0]?.toLowerCase();
   const extFromMime: Record<string, string> = {
@@ -51,7 +52,6 @@ export function buildImageName(originalName: string, mime: string): string {
 
 /** Folder penyimpanan lokal (di luar `public/` agar disajikan via route). */
 export function localUploadDir(): string {
-  const path = require("node:path") as typeof import("node:path");
   return path.join(process.cwd(), ".data", "uploads");
 }
 
@@ -63,7 +63,7 @@ function supabaseConfig() {
 
 /**
  * Simpan buffer gambar dan kembalikan URL publiknya.
- * Melempar error dengan pesan Bahasa Indonesia bila semua strategi gagal.
+ * Melempar error berbahasa Indonesia bila semua strategi gagal.
  */
 export async function saveImage(
   buffer: Buffer,
@@ -72,34 +72,7 @@ export async function saveImage(
 ): Promise<SavedImage> {
   const errors: string[] = [];
 
-  // 1) Vercel Blob
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
-    try {
-      const blob = await put(`berita/${filename}`, buffer, {
-        access: "public",
-        contentType,
-        addRandomSuffix: false,
-        token: process.env.BLOB_READ_WRITE_TOKEN,
-      });
-      return { url: blob.url, storage: "vercel-blob" };
-    } catch (error) {
-      errors.push(`blob: ${error instanceof Error ? error.message : "gagal"}`);
-    }
-  }
-
-  // 2) Folder lokal (pengembangan / self-host)
-  try {
-    const { mkdir, writeFile } = await import("node:fs/promises");
-    const path = await import("node:path");
-    const dir = localUploadDir();
-    await mkdir(dir, { recursive: true });
-    await writeFile(path.join(dir, filename), buffer);
-    return { url: `/api/media/${filename}`, storage: "local" };
-  } catch (error) {
-    errors.push(`lokal: ${error instanceof Error ? error.message : "gagal"}`);
-  }
-
-  // 3) Supabase Storage
+  // 1) Supabase Storage
   const cfg = supabaseConfig();
   if (cfg) {
     try {
@@ -127,6 +100,32 @@ export async function saveImage(
     } catch (error) {
       errors.push(`supabase: ${error instanceof Error ? error.message : "gagal"}`);
     }
+  }
+
+  // 2) Vercel Blob
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    try {
+      const blob = await put(`berita/${filename}`, buffer, {
+        access: "public",
+        contentType,
+        addRandomSuffix: false,
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+      });
+      return { url: blob.url, storage: "vercel-blob" };
+    } catch (error) {
+      errors.push(`blob: ${error instanceof Error ? error.message : "gagal"}`);
+    }
+  }
+
+  // 3) Folder lokal
+  try {
+    const { mkdir, writeFile } = await import("node:fs/promises");
+    const dir = localUploadDir();
+    await mkdir(dir, { recursive: true });
+    await writeFile(path.join(dir, filename), buffer);
+    return { url: `/api/media/${filename}`, storage: "local" };
+  } catch (error) {
+    errors.push(`lokal: ${error instanceof Error ? error.message : "gagal"}`);
   }
 
   throw new Error(`Gagal menyimpan gambar. ${errors.join(" | ")}`);
