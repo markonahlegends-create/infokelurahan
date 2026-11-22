@@ -17,8 +17,15 @@ function secret(): string {
   );
 }
 
+/**
+ * Di produksi ADMIN_PASSWORD wajib diisi lewat environment variable.
+ * Nilai cadangan hanya berlaku saat pengembangan lokal.
+ */
 function adminPassword(): string {
-  return process.env.ADMIN_PASSWORD ?? "infokelurahan2026";
+  const fromEnv = process.env.ADMIN_PASSWORD;
+  if (fromEnv && fromEnv.length > 0) return fromEnv;
+  if (process.env.NODE_ENV === "production") return "";
+  return "infokelurahan2026";
 }
 
 function sign(payload: string): string {
@@ -33,7 +40,10 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 export function verifyPassword(input: string): boolean {
-  return safeEqual(input, adminPassword());
+  const expected = adminPassword();
+  // Tanpa kata sandi yang dikonfigurasi, login selalu ditolak.
+  if (expected.length === 0) return false;
+  return safeEqual(input, expected);
 }
 
 export function createSessionToken(): string {

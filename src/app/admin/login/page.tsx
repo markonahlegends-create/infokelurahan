@@ -119,15 +119,13 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
-          <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.04] p-3">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Sesi demo</p>
-            <p className="mt-1 text-[11px] leading-relaxed text-ink-300">
-              Kata sandi default: <code className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[10.5px] text-flame-300">infokelurahan2026</code>
-              <br />
-              Ubah lewat variabel <code className="font-mono text-[10px]">ADMIN_PASSWORD</code> sebelum
-              dipakai publik.
-            </p>
-          </div>
+          <p className="mt-5 flex items-start gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-3 text-[11px] leading-relaxed text-ink-400">
+            <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>
+              Area terbatas untuk redaksi. Sesi berakhir otomatis setelah 8 jam, dan
+              percobaan masuk dibatasi 6 kali per 10 menit.
+            </span>
+          </p>
         </div>
       </motion.div>
     </main>
