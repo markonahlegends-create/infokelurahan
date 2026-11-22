@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CalendarDays, Clock, MapPin } from "lucide-react";
 import type { Agenda, Announcement } from "@/lib/types";
-import { formatShortDateID, formatTimeID } from "@/lib/utils";
+import { formatShortDateID, formatTimeID, wibDayNumber, wibMonthShort } from "@/lib/utils";
 
 const LEVEL_STYLE = {
   penting: { label: "Penting", className: "bg-flame-500 text-white" },
@@ -40,11 +40,8 @@ export function AgendaPanel({ agendas }: { agendas: Agenda[] }) {
   return (
     <div className="space-y-1">
       {agendas.slice(0, 4).map((agenda) => {
-        const date = new Date(agenda.starts_at);
-        const day = Number.isNaN(date.getTime()) ? "—" : String(date.getDate()).padStart(2, "0");
-        const month = Number.isNaN(date.getTime())
-          ? "—"
-          : ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"][date.getMonth()];
+        const day = wibDayNumber(agenda.starts_at);
+        const month = wibMonthShort(agenda.starts_at).toUpperCase();
         return (
           <div
             key={agenda.id}

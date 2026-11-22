@@ -11,32 +11,66 @@ const MONTHS = [
 
 const DAYS = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
+/**
+ * Waktu di situs selalu disajikan dalam zona WIB (UTC+7) agar hasil sama
+ * di server (UTC) maupun di peramban pengguna, dan agar jam agenda tidak
+ * bergeser 7 jam.
+ */
+const WIB_OFFSET_MS = 7 * 60 * 60 * 1000;
+
+/** Geser waktu ke WIB lalu baca komponennya dengan getter UTC. */
+function wibParts(iso: string) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  const shifted = new Date(date.getTime() + WIB_OFFSET_MS);
+  return {
+    day: shifted.getUTCDate(),
+    month: shifted.getUTCMonth(),
+    year: shifted.getUTCFullYear(),
+    weekday: shifted.getUTCDay(),
+    hours: shifted.getUTCHours(),
+    minutes: shifted.getUTCMinutes(),
+  };
+}
+
 /** 9 November 2026 */
 export function formatDateID(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "-";
-  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  const p = wibParts(iso);
+  if (!p) return "-";
+  return `${p.day} ${MONTHS[p.month]} ${p.year}`;
 }
 
 /** Senin, 9 November 2026 */
 export function formatLongDateID(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "-";
-  return `${DAYS[d.getDay()]}, ${formatDateID(iso)}`;
+  const p = wibParts(iso);
+  if (!p) return "-";
+  return `${DAYS[p.weekday]}, ${p.day} ${MONTHS[p.month]} ${p.year}`;
 }
 
 /** 09 Nov 2026 */
 export function formatShortDateID(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "-";
-  return `${String(d.getDate()).padStart(2, "0")} ${MONTHS[d.getMonth()].slice(0, 3)} ${d.getFullYear()}`;
+  const p = wibParts(iso);
+  if (!p) return "-";
+  return `${String(p.day).padStart(2, "0")} ${MONTHS[p.month].slice(0, 3)} ${p.year}`;
 }
 
 /** 14:11 WIB */
 export function formatTimeID(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "-";
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")} WIB`;
+  const p = wibParts(iso);
+  if (!p) return "-";
+  return `${String(p.hours).padStart(2, "0")}:${String(p.minutes).padStart(2, "0")} WIB`;
+}
+
+/** 25 (untuk kotak tanggal di kartu agenda) */
+export function wibDayNumber(iso: string): string {
+  const p = wibParts(iso);
+  return p ? String(p.day).padStart(2, "0") : "-";
+}
+
+/** Nov (untuk kotak tanggal di kartu agenda) */
+export function wibMonthShort(iso: string): string {
+  const p = wibParts(iso);
+  return p ? MONTHS[p.month].slice(0, 3) : "-";
 }
 
 /** "3 jam lalu", "2 hari lalu" */

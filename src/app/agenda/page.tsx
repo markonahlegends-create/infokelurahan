@@ -3,7 +3,7 @@ import Link from "next/link";
 import { CalendarDays, Clock, MapPin, Megaphone, UserRound } from "lucide-react";
 import { getRepository } from "@/lib/data";
 import { getDistrict } from "@/lib/wilayah";
-import { formatLongDateID, formatTimeID } from "@/lib/utils";
+import { formatLongDateID, formatTimeID, wibDayNumber, wibMonthShort } from "@/lib/utils";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { PageHero } from "@/components/layout/PageHero";
@@ -54,13 +54,8 @@ export default async function AgendaPage() {
               />
               <div className="space-y-3">
                 {agendas.map((agenda, i) => {
-                  const date = new Date(agenda.starts_at);
-                  const day = Number.isNaN(date.getTime()) ? "—" : String(date.getDate()).padStart(2, "0");
-                  const month = Number.isNaN(date.getTime())
-                    ? "—"
-                    : ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"][
-                        date.getMonth()
-                      ];
+                  const day = wibDayNumber(agenda.starts_at);
+                  const month = wibMonthShort(agenda.starts_at);
                   const district = getDistrict(agenda.district_slug);
                   return (
                     <Reveal key={agenda.id} delay={i * 0.05} distance={20}>
