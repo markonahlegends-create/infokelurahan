@@ -1,0 +1,269 @@
+/* ==========================================================================
+   Info Kelurahan — Design System
+   Portal berita kelurahan Kota Cilegon
+   Font  : Plus Jakarta Sans (self-hosted, OFL)
+   Tema  : "editorial modern" — navy dalam, aksen oranye-semangat,
+           permukaan kertas hangat, dan gradasi khas Cilegon.
+   ========================================================================== */
+
+@import "tailwindcss";
+@import "@fontsource-variable/plus-jakarta-sans";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* Warna merek */
+  --color-ink-50: #f4f6fb;
+  --color-ink-100: #e5e9f3;
+  --color-ink-200: #c9d2e6;
+  --color-ink-300: #9fafd0;
+  --color-ink-400: #6f83ad;
+  --color-ink-500: #4d6291;
+  --color-ink-600: #394b76;
+  --color-ink-700: #2c3b5f;
+  --color-ink-800: #1d2947;
+  --color-ink-900: #121b33;
+  --color-ink-950: #0a1122;
+
+  --color-flame-50: #fff5ed;
+  --color-flame-100: #ffe9d5;
+  --color-flame-200: #feceaa;
+  --color-flame-300: #fdac74;
+  --color-flame-400: #fb7f3c;
+  --color-flame-500: #f85e16;
+  --color-flame-600: #e9440c;
+  --color-flame-700: #c1310c;
+  --color-flame-800: #992912;
+  --color-flame-900: #7b2512;
+
+  --color-sea-400: #2dd4bf;
+  --color-sea-500: #14b8a6;
+  --color-sea-600: #0d9488;
+
+  --color-paper: #fbf9f6;
+  --color-paper-warm: #f6f2ec;
+
+  /* Animasi kustom */
+  --animate-marquee: marquee 38s linear infinite;
+  --animate-float-slow: float-slow 9s ease-in-out infinite;
+  --animate-shimmer: shimmer 2.4s linear infinite;
+  --animate-ping-slow: ping-slow 2.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+  --animate-gradient: gradient-pan 12s ease infinite;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(0, -18px, 0) rotate(2deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -700px 0; }
+  100% { background-position: 700px 0; }
+}
+
+@keyframes ping-slow {
+  0% { transform: scale(1); opacity: 0.7; }
+  70%, 100% { transform: scale(2.4); opacity: 0; }
+}
+
+@keyframes gradient-pan {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ── Base ──────────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink-900);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv01";
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background-color: var(--color-flame-500);
+    color: white;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-flame-500);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Scrollbar halus */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-ink-900) 22%, transparent);
+    border-radius: 99px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--color-flame-500) 70%, transparent);
+    background-clip: content-box;
+  }
+}
+
+/* ── Utilitas ──────────────────────────────────────────────────────── */
+@utility container-page {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  max-width: 80rem;
+
+  @media (min-width: 640px) { padding-inline: 1.5rem; }
+  @media (min-width: 1280px) { padding-inline: 2rem; }
+}
+
+@utility text-gradient-flame {
+  background-image: linear-gradient(100deg, var(--color-flame-400), var(--color-flame-600) 55%, #d9480f);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+@utility card-lift {
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.45s ease;
+  will-change: transform;
+
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 24px 50px -24px color-mix(in srgb, var(--color-ink-950) 38%, transparent);
+  }
+}
+
+@utility glass {
+  background: color-mix(in srgb, white 74%, transparent);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
+
+@utility glass-dark {
+  background: color-mix(in srgb, var(--color-ink-950) 64%, transparent);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+}
+
+@utility mesh-dark {
+  background-color: var(--color-ink-950);
+  background-image:
+    radial-gradient(at 12% 8%, rgba(248, 94, 22, 0.28) 0px, transparent 52%),
+    radial-gradient(at 88% 4%, rgba(20, 184, 166, 0.22) 0px, transparent 46%),
+    radial-gradient(at 72% 88%, rgba(99, 102, 241, 0.24) 0px, transparent 52%),
+    radial-gradient(at 8% 92%, rgba(248, 94, 22, 0.16) 0px, transparent 46%);
+}
+
+@utility noise-overlay {
+  position: relative;
+  isolation: isolate;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.045;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+/* Garis aksen berjalan pada kartu headline */
+@utility accent-bar {
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-flame-500), var(--color-sea-400), var(--color-flame-500));
+    background-size: 200% 100%;
+    animation: gradient-pan 6s linear infinite;
+  }
+}
+
+/* Klip miring khas portal berita */
+@utility clip-slant {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 calc(100% - 2.5vw));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Tampilan artikel kaya (rich text) */
+.article-prose {
+  color: var(--color-ink-800);
+  font-size: 1.0625rem;
+  line-height: 1.85;
+}
+.article-prose > * + * { margin-top: 1.15em; }
+.article-prose strong { color: var(--color-ink-950); font-weight: 700; }
+.article-prose a {
+  color: var(--color-flame-600);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+.article-prose blockquote {
+  border-left: 4px solid var(--color-flame-500);
+  padding: 0.35rem 0 0.35rem 1.25rem;
+  font-style: italic;
+  color: var(--color-ink-700);
+  background: linear-gradient(90deg, var(--color-flame-50), transparent 85%);
+  border-radius: 0 0.75rem 0.75rem 0;
+}
+.article-prose h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--color-ink-950);
+  margin-top: 1.9em;
+}
+
+@media (min-width: 768px) {
+  .article-prose {
+    font-size: 1.125rem;
+    line-height: 1.9;
+  }
+}
