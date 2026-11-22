@@ -158,19 +158,28 @@ Unggahan foto sampul memakai strategi berlapis, dipilih otomatis:
 
 | Prioritas | Penyimpanan | Syarat | Hasil URL |
 | --- | --- | --- | --- |
-| 1 | **Vercel Blob** | env `BLOB_READ_WRITE_TOKEN` | `https://….public.blob.vercel-storage.com/berita/…` |
-| 2 | **Folder lokal** | selalu tersedia saat pengembangan | `/api/media/…` |
-| 3 | **Supabase Storage** | bucket publik `media` sudah dibuat | `…/storage/v1/object/public/media/…` |
+| 1 | **Supabase Storage** | bucket publik `media` (sudah dibuat) | `…/storage/v1/object/public/media/…` |
+| 2 | **Vercel Blob** | env `BLOB_READ_WRITE_TOKEN` | `https://….public.blob.vercel-storage.com/berita/…` |
+| 3 | **Folder lokal** | selalu tersedia saat pengembangan | `/api/media/…` |
+
+Supabase Storage dipilih lebih dulu karena sudah terhubung dengan database situs
+dan tetap persisten di lingkungan serverless Vercel.
 
 Aktifkan Vercel Blob (gratis, kuota Hobby) di dashboard Vercel: **Storage →
 Create Database → Blob**, lalu hubungkan ke project. Token akan muncul sebagai
 `BLOB_READ_WRITE_TOKEN` dan dipakai otomatis tanpa mengubah kode.
 
-Bila memakai Supabase Storage, buat bucket publik bernama `media`:
+Bucket `media` (publik, batas 5 MB, hanya tipe gambar) sudah dibuat pada
+project ini. Untuk project Supabase baru, jalankan:
 
 ```sql
-insert into storage.buckets (id, name, public) values ('media','media',true)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('media','media',true, 5242880,
+        array['image/jpeg','image/png','image/webp','image/avif','image/gif'])
 on conflict (id) do nothing;
+
+create policy "media_public_read" on storage.objects
+  for select using (bucket_id = 'media');
 ```
 
 ## 🔐 Keamanan
