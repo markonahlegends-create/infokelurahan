@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLockup } from "@/components/ui/BrandLogo";
 import { ArrowUpRight, Mail, MapPin, Phone, Radio } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
 import { DISTRICTS } from "@/lib/wilayah";
@@ -50,14 +51,7 @@ export function SiteFooter() {
 
         <div className="container-page grid grid-cols-2 gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
           <div className="col-span-2 lg:col-span-1">
-            <Link href="/" className="flex items-center gap-2.5">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-flame-500 to-flame-700 text-[15px] font-extrabold text-white">
-                IK
-              </span>
-              <span className="text-lg font-extrabold tracking-tight text-white">
-                Info<span className="text-flame-400">Kelurahan</span>
-              </span>
-            </Link>
+            <BrandLockup size={40} tone="dark" compact />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink-300">
               Portal berita dan informasi kelurahan Kota Cilegon. Menyajikan kabar pemerintahan,
               pembangunan, pendidikan, kesehatan, olahraga, dan kehidupan warga dari 8 kecamatan
@@ -146,18 +140,6 @@ export function SiteFooter() {
         <div className="border-t border-white/10">
           <div className="container-page flex flex-col items-center justify-between gap-3 py-5 text-[11.5px] text-ink-400 sm:flex-row">
             <p>© {year} Info Kelurahan. Dibangun untuk warga Kota Cilegon.</p>
-            <p className="text-center sm:text-right">
-              Sumber berita awal:{" "}
-              <a
-                href="https://berita.cilegon.go.id"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold text-ink-200 underline decoration-flame-500/60 underline-offset-2 hover:text-white"
-              >
-                Diskominfo Kota Cilegon
-              </a>
-              . Foto hak milik sumber aslinya.
-            </p>
           </div>
         </div>
       </div>

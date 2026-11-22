@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import NextImage from "next/image";
+import { BrandMark } from "@/components/ui/BrandLogo";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -68,9 +70,7 @@ export function AdminDashboard({ initialPosts, stats, driver, adminHealthy }: Ad
       <header className="sticky top-0 z-40 border-b border-ink-900/8 bg-white/85 backdrop-blur-xl">
         <div className="container-page flex h-14 items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-flame-500 to-flame-700 text-[11px] font-extrabold text-white">
-              IK
-            </span>
+            <BrandMark size={32} className="rounded-lg" />
             <div className="leading-none">
               <p className="text-[13px] font-extrabold text-ink-950">Dashboard Redaksi</p>
               <p className="mt-0.5 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-400">
@@ -234,8 +234,8 @@ export function AdminDashboard({ initialPosts, stats, driver, adminHealthy }: Ad
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={post.cover_image} alt="" className="h-full w-full object-cover" loading="lazy" />
                   ) : (
-                    <div className="grid h-full w-full place-items-center bg-ink-950 text-[9px] font-bold text-ink-400">
-                      IK
+                    <div className="grid h-full w-full place-items-center bg-ink-950">
+                      <NextImage src="/images/icon-512.png" alt="" width={24} height={24} className="h-6 w-6 opacity-80" />
                     </div>
                   )}
                 </div>

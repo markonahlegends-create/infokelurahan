@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { BrandMark } from "@/components/ui/BrandLogo";
 import { ArrowLeft, Eye, EyeOff, Loader2, LockKeyhole, ShieldCheck } from "lucide-react";
 
 export default function AdminLoginPage() {
@@ -60,9 +61,7 @@ export default function AdminLoginPage() {
 
         <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-2xl backdrop-blur-xl sm:p-8">
           <div className="mb-6 flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-flame-500 to-flame-700 text-[14px] font-extrabold text-white">
-              IK
-            </span>
+            <BrandMark size={44} />
             <div>
               <h1 className="text-lg font-extrabold tracking-tight text-white">Dashboard Redaksi</h1>
               <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-ink-400">

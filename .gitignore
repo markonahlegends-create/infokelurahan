@@ -12,3 +12,9 @@ next-env.d.ts
 .DS_Store
 .data
 coverage
+
+# Unggahan gambar lokal (pengembangan)
+public/uploads
+
+# Berkas kerja desain (bukan aset situs)
+/assets

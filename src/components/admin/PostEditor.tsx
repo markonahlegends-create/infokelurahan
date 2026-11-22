@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -14,6 +14,7 @@ import {
   Send,
   Sparkles,
   Trash2,
+  UploadCloud,
   X,
 } from "lucide-react";
 import { CATEGORIES } from "@/lib/categories";
@@ -45,6 +46,10 @@ export function PostEditor({ post, onClose }: PostEditorProps) {
   const [saving, setSaving] = useState<"draft" | "publish" | null>(null);
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [preview, setPreview] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [dragging, setDragging] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const villages = useMemo(
     () => (district ? VILLAGES.filter((v) => v.district_slug === district) : VILLAGES),
@@ -68,6 +73,42 @@ export function PostEditor({ post, onClose }: PostEditorProps) {
       textarea.focus();
       textarea.setSelectionRange(start + 2, start + 2 + selected.length);
     });
+  };
+
+  const MAX_MB = 5;
+  const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];
+
+  /** Validasi di sisi klien lalu unggah berkas ke /api/admin/upload. */
+  const uploadFile = async (file: File | undefined | null) => {
+    if (!file) return;
+    setUploadError("");
+
+    if (!ACCEPTED.includes(file.type)) {
+      setUploadError("Format harus JPG, PNG, WEBP, AVIF, atau GIF.");
+      return;
+    }
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setUploadError(`Ukuran gambar maksimal ${MAX_MB} MB.`);
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body });
+      const data = (await res.json()) as { ok: boolean; url?: string; error?: string };
+      if (!res.ok || !data.ok || !data.url) {
+        setUploadError(data.error ?? "Gagal mengunggah gambar.");
+        return;
+      }
+      setCover(data.url);
+    } catch {
+      setUploadError("Tidak dapat menghubungi server.");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
   };
 
   const submit = async (status: "draft" | "publish") => {
@@ -260,21 +301,96 @@ export function PostEditor({ post, onClose }: PostEditorProps) {
           </label>
         </div>
 
-        <label className="block">
-          <span className={label}>URL foto sampul</span>
-          <div className="relative">
-            <ImageIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
-            <input
-              value={cover}
-              onChange={(e) => setCover(e.target.value)}
-              placeholder="https://…/foto.jpg atau /images/foto.jpg"
-              className={`${field} pl-9`}
-            />
-          </div>
+        <div className="block">
+          <span className={label}>Foto sampul</span>
+
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
+            className="sr-only"
+            onChange={(e) => uploadFile(e.target.files?.[0])}
+          />
+
+          {cover ? (
+            <div className="group relative overflow-hidden rounded-xl border border-ink-200 bg-ink-950">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={cover} alt="Pratinjau foto sampul" className="h-40 w-full object-cover" />
+              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-gradient-to-t from-ink-950/90 to-transparent px-2.5 pb-2 pt-6">
+                <span className="truncate text-[10px] font-semibold text-white/80">
+                  {cover.split("/").pop()}
+                </span>
+                <div className="flex shrink-0 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading}
+                    className="rounded-lg bg-white/15 px-2 py-1 text-[10px] font-bold text-white backdrop-blur transition hover:bg-white/25 disabled:opacity-50"
+                  >
+                    {uploading ? "Mengunggah…" : "Ganti"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCover("")}
+                    className="grid h-6 w-6 place-items-center rounded-lg bg-white/15 text-white backdrop-blur transition hover:bg-flame-500"
+                    aria-label="Hapus foto sampul"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragging(true);
+              }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragging(false);
+                uploadFile(e.dataTransfer.files?.[0]);
+              }}
+              disabled={uploading}
+              className={`flex w-full flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed px-4 py-6 text-center transition disabled:opacity-60 ${
+                dragging
+                  ? "border-flame-500 bg-flame-50"
+                  : "border-ink-200 bg-paper-warm/40 hover:border-flame-400 hover:bg-flame-50/50"
+              }`}
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="h-6 w-6 animate-spin text-flame-500" />
+                  <span className="text-[11.5px] font-bold text-ink-700">Mengunggah gambar…</span>
+                </>
+              ) : (
+                <>
+                  <span className="grid h-10 w-10 place-items-center rounded-full bg-flame-100 text-flame-600">
+                    <UploadCloud className="h-5 w-5" />
+                  </span>
+                  <span className="text-[11.5px] font-bold text-ink-800">
+                    Klik untuk pilih gambar
+                  </span>
+                  <span className="text-[10px] text-ink-500">
+                    atau lepas berkas di sini · JPG, PNG, WEBP · maks {MAX_MB} MB
+                  </span>
+                </>
+              )}
+            </button>
+          )}
+
+          {uploadError && (
+            <p className="mt-1.5 flex items-start gap-1 rounded-lg bg-flame-50 px-2.5 py-1.5 text-[10.5px] font-semibold text-flame-700 ring-1 ring-flame-200">
+              <X className="mt-px h-3 w-3 shrink-0" /> {uploadError}
+            </p>
+          )}
           <span className="mt-1 block text-[10px] text-ink-400">
-            Kosongkan untuk memakai gambar placeholder bermerek.
+            Biarkan kosong untuk memakai gambar placeholder bermerek.
           </span>
-        </label>
+        </div>
 
         <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-ink-200 bg-paper-warm/50 px-3 py-2.5">
           <input

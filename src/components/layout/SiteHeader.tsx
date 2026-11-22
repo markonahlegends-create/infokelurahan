@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { BrandLockup } from "@/components/ui/BrandLogo";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-motion";
 import {
@@ -71,21 +72,7 @@ export function SiteHeader() {
         <div className="container-page">
           <div className="flex h-16 items-center justify-between gap-3 sm:h-[70px]">
             {/* Logo */}
-            <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label="Info Kelurahan — Beranda">
-              <span className="relative grid h-10 w-10 place-items-center overflow-hidden rounded-xl bg-ink-950 shadow-lg shadow-ink-950/25 transition duration-500 group-hover:scale-105">
-                <span className="absolute inset-0 bg-gradient-to-br from-flame-500 via-flame-600 to-flame-700 opacity-95" />
-                <span className="absolute -right-3 -top-3 h-6 w-6 rounded-full bg-sea-400/70 blur-md" />
-                <span className="relative text-[15px] font-extrabold tracking-tight text-white">IK</span>
-              </span>
-              <span className="flex flex-col leading-none">
-                <span className="text-[17px] font-extrabold tracking-tight text-ink-950 sm:text-lg">
-                  Info<span className="text-flame-600">Kelurahan</span>
-                </span>
-                <span className="mt-1 text-[9.5px] font-semibold uppercase tracking-[0.19em] text-ink-400">
-                  Kota Cilegon · Banten
-                </span>
-              </span>
-            </Link>
+            <BrandLockup size={40} />
 
             {/* Nav desktop */}
             <nav className="hidden items-center gap-1 lg:flex" aria-label="Navigasi utama">

@@ -27,7 +27,10 @@ ringan. Dibangun **sepenuhnya dengan perkakas gratis & open source**.
 ### Untuk redaksi
 - **Dashboard admin** (`/admin`) untuk menulis, mengubah, dan menghapus berita.
 - **Pratinjau langsung** saat menulis, editor paragraf dengan penebalan teks.
-- Pilihan rubrik, kecamatan, kelurahan, penulis, foto sampul, serta headline.
+- Pilihan rubrik, kecamatan, kelurahan, penulis, serta headline.
+- **Unggah foto sampul berupa berkas gambar** (klik atau lepas berkas) — bukan
+  tempel URL. Format JPG/PNG/WEBP/AVIF/GIF, maksimal 5 MB, divalidasi tipe &
+  isi berkasnya di server.
 - Simpan sebagai **draf** atau langsung **terbitkan**.
 - Status koneksi data (Supabase / mode demo) tampil di dashboard.
 
@@ -149,6 +152,27 @@ supabase/schema.sql               Skema database + RLS
 
 ---
 
+## 🖼️ Penyimpanan gambar unggahan
+
+Unggahan foto sampul memakai strategi berlapis, dipilih otomatis:
+
+| Prioritas | Penyimpanan | Syarat | Hasil URL |
+| --- | --- | --- | --- |
+| 1 | **Vercel Blob** | env `BLOB_READ_WRITE_TOKEN` | `https://….public.blob.vercel-storage.com/berita/…` |
+| 2 | **Folder lokal** | selalu tersedia saat pengembangan | `/api/media/…` |
+| 3 | **Supabase Storage** | bucket publik `media` sudah dibuat | `…/storage/v1/object/public/media/…` |
+
+Aktifkan Vercel Blob (gratis, kuota Hobby) di dashboard Vercel: **Storage →
+Create Database → Blob**, lalu hubungkan ke project. Token akan muncul sebagai
+`BLOB_READ_WRITE_TOKEN` dan dipakai otomatis tanpa mengubah kode.
+
+Bila memakai Supabase Storage, buat bucket publik bernama `media`:
+
+```sql
+insert into storage.buckets (id, name, public) values ('media','media',true)
+on conflict (id) do nothing;
+```
+
 ## 🔐 Keamanan
 
 - Sesi admin: cookie `HttpOnly` bertanda-tangan **HMAC-SHA256**, berlaku 8 jam.
@@ -158,6 +182,7 @@ supabase/schema.sql               Skema database + RLS
 - Seluruh rute `/admin` & `/api/admin/*` dilindungi pemeriksaan sesi.
 
 > Ganti `ADMIN_PASSWORD` dan `ADMIN_SESSION_SECRET` sebelum dipakai publik.
+> Di produksi login **ditolak** bila `ADMIN_PASSWORD` tidak diisi.
 
 ---
 
